@@ -1,0 +1,268 @@
+# .claudecontext - Docker Project Example
+
+# Project: LinkedIn Connection Scraper
+
+## Project Type
+[X] Docker Application (On-Prem)
+[ ] AWS Serverless (Mono-repo)
+
+## Baseline Standards
+Primary: https://github.com/vestgoteUptive/claude-baseline
+Core Patterns: https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md
+Local: .standards/CORE-PATTERNS.md
+
+## Tech Stack
+
+Frontend: React 18 TypeScript Tailwind Vite
+Backend: Go 1.21 Gin
+Database: SQLite (local file storage)
+Browser: Puppeteer (headless Chrome in Docker)
+Deployment: docker-compose on Unraid
+
+## Architecture
+
+Single-service application for LinkedIn connection scraping:
+- Frontend: React SPA for viewing connections and graphs
+- Backend: Go API managing scraping jobs and serving data
+- Scraper: Puppeteer automation in same container
+- Database: SQLite for simplicity (connections.db)
+- Deployment: Single docker-compose.yml on Unraid server
+
+## Database Schema
+
+### SQLite
+
+```sql
+CREATE TABLE connections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    profile_url TEXT,
+    company TEXT,
+    position TEXT,
+    connected_at TIMESTAMP,
+    scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_connections_company ON connections(company);
+CREATE INDEX idx_connections_scraped ON connections(scraped_at DESC);
+
+CREATE TABLE relationships (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    from_connection_id INTEGER NOT NULL REFERENCES connections(id) ON DELETE CASCADE,
+    to_connection_id INTEGER NOT NULL REFERENCES connections(id) ON DELETE CASCADE,
+    relationship_type TEXT DEFAULT 'colleague',
+    UNIQUE(from_connection_id, to_connection_id)
+);
+
+CREATE INDEX idx_relationships_from ON relationships(from_connection_id);
+CREATE INDEX idx_relationships_to ON relationships(to_connection_id);
+
+CREATE TABLE scrape_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    status TEXT DEFAULT 'pending', -- pending, running, completed, failed
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    total_connections INTEGER DEFAULT 0,
+    error_message TEXT
+);
+```
+
+## API Endpoints
+
+### Scraping
+- POST /api/v1/scrape/start - Start new scraping session
+- GET /api/v1/scrape/status/:id - Get scrape job status
+- POST /api/v1/scrape/stop - Stop current scraping
+
+### Connections
+- GET /api/v1/connections - List all scraped connections (pagination: ?limit=50&offset=0)
+- GET /api/v1/connections/:id - Get single connection details
+- GET /api/v1/connections/search?q=term - Search connections by name or company
+- DELETE /api/v1/connections/:id - Delete connection
+
+### Graph
+- GET /api/v1/graph - Get full dependency graph (nodes and edges)
+- GET /api/v1/graph/:id - Get subgraph for specific connection
+- GET /api/v1/stats - Get scraping statistics
+
+## Environment Variables
+
+```bash
+# LinkedIn Credentials
+LINKEDIN_EMAIL=your-email@example.com
+LINKEDIN_PASSWORD=your-password
+
+# Database
+DATABASE_PATH=/data/connections.db
+
+# Scraper Settings
+HEADLESS=true
+SCRAPE_DELAY_MS=2000  # Delay between requests to avoid detection
+MAX_CONNECTIONS=500   # Safety limit
+
+# Application
+PORT=8080
+ENVIRONMENT=production
+LOG_LEVEL=info
+```
+
+## Key Patterns & Conventions
+
+### API Response Format
+```json
+{
+  "data": {...},
+  "error": {"code": "", "message": "", "details": {}},
+  "metadata": {"timestamp": "2026-01-14T10:00:00Z", "request_id": ""}
+}
+```
+
+### Scraping Rules
+- Simplified approach: Capture name, company, position only (no deep profile analysis)
+- Rate limiting: 2-second delay between connection fetches (configurable)
+- Safety: Stop after 500 connections or on error
+- Error handling: Retry failed fetches max 3 times
+- Session management: Reuse browser session across scrapes
+
+### Code Organization
+- Handler → Service → Repository → Database (follow baseline layered architecture)
+- Scraper is separate service called by ScrapeService
+- All scraping logic isolated in internal/scraper/
+
+## File Locations
+
+Backend:
+- Main: cmd/server/main.go
+- Handlers: internal/api/handlers/{scrape,connection,graph,health}.go
+- Services: internal/service/{scrape_service,connection_service,graph_service}.go
+- Repositories: internal/repository/{connection_repo,scrape_job_repo}.go (SQLite)
+- Scraper: internal/scraper/{browser,linkedin}.go
+- Models: internal/models/{connection,scrape_job,relationship}.go
+- Router: internal/api/router.go
+
+Frontend:
+- Main: src/main.tsx
+- Pages: src/pages/{Home,Connections,Graph,Scrape}.tsx
+- Components: src/components/features/{ConnectionCard,GraphVisualization,ScrapeControl}.tsx
+- Hooks: src/hooks/{useConnections,useScrapeStatus}.ts
+- API: src/lib/api/{client,generated}.ts
+
+## External Integrations
+
+### LinkedIn
+- Purpose: Web scraping via Puppeteer
+- Authentication: Username/password login (stored in env vars)
+- Access: Headless Chrome browser in Docker container
+- Rate limiting: 2-second delays to avoid detection
+
+### Puppeteer
+- Version: Latest compatible with Chrome in Docker
+- Headless: true (configurable via env)
+- Navigation timeout: 30 seconds
+- Wait strategies: waitForSelector for LinkedIn elements
+
+## Development Commands
+
+```bash
+# Start services
+docker-compose up -d
+
+# View logs (follow scraping progress)
+docker-compose logs -f backend
+
+# Rebuild after code changes
+docker-compose up -d --build
+
+# Access database
+docker-compose exec backend sqlite3 /data/connections.db
+
+# Run tests
+docker-compose exec backend go test ./...
+docker-compose exec frontend npm test
+```
+
+## Testing Strategy
+
+Unit Tests:
+- ScrapeService: Mock browser interactions
+- ConnectionService: Test business logic with mock repo
+- GraphService: Test graph building logic
+
+Manual Testing:
+- Start scrape via API
+- Monitor logs for progress
+- Verify data in SQLite
+- Check frontend graph visualization
+
+## Special Considerations
+
+### Scraping Ethics & Limitations
+- This is for personal use only (your own LinkedIn connections)
+- Respects LinkedIn rate limits with 2-second delays
+- Minimal data extraction (no private profile details)
+- Uses headless browser (same as manual browsing)
+- No data sharing or external storage
+
+### Browser Automation Challenges
+- LinkedIn HTML structure may change (requires maintenance)
+- Selectors defined in internal/scraper/selectors.go for easy updates
+- Login flow may require 2FA (manual intervention in that case)
+- Session cookies stored securely in /data/cookies.json
+
+### Performance Notes
+- Scraping 100 connections takes ~4-5 minutes (due to rate limiting)
+- Database queries are fast with proper indexes
+- Graph generation cached (regenerated only when data changes)
+
+## Recent Architectural Decisions
+
+### Use SQLite Instead of PostgreSQL
+Date: 2026-01-14
+- Decision: SQLite for local data storage
+- Reasoning: Simple POC, single user, low complexity, no need for client-server DB
+- Impact: File-based storage at /data/connections.db, no migrations needed
+
+### Simplified Scraping (No Deep Profiles)
+Date: 2026-01-14
+- Decision: Scrape only basic info (name, company, position)
+- Reasoning: Faster, less detection risk, sufficient for dependency graphs
+- Impact: Missing detailed profile data, but meets project goals
+
+## Project-Specific Notes
+
+- This is a personal tool for analyzing your own LinkedIn network
+- Data never leaves your Unraid server (fully local)
+- Graph visualization uses D3.js force-directed layout
+- Future enhancement: Export to CSV for further analysis
+- Deployed to Unraid, accessible via http://unraid-ip:8080
+
+---
+
+## Claude Code Usage
+
+### Starting New Feature
+```
+"Read .claudecontext. Following patterns from 
+https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md
+create ExportService to export connections to CSV format."
+```
+
+### Fixing Scraper Issues
+```
+"Context: .claudecontext. Fix error in internal/scraper/linkedin.go:67
+Error: 'timeout waiting for selector .connection-card'
+This happens when LinkedIn changes their HTML structure.
+Update selector constants in selectors.go and retry logic."
+```
+
+### Adding Visualization
+```
+"Following .claudecontext frontend patterns, create GraphVisualization component 
+that uses D3.js to render the relationship graph from /api/v1/graph endpoint."
+```
+
+---
+
+Last Updated: 2026-01-14
+Baseline Version: v1.0.0
+Author: Henrik

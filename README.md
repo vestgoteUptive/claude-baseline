@@ -1,427 +1,251 @@
-# Project Baseline Standards
+# .claudecontext Examples
 
-**Version:** 1.0.0  
-**Created:** 2026-01-14  
-**Author:** Henrik
+This directory contains example `.claudecontext` files for different project types, all referencing the baseline standards at https://github.com/vestgoteUptive/claude-baseline
 
----
+## Files
 
-## What Is This?
+### `.claudecontext.example`
+**Generic template** - Copy and customize for any project type.
 
-A comprehensive set of baseline standards and best practices for creating two types of projects with maximum Claude Code efficiency:
+Contains:
+- Complete structure with all sections
+- Placeholders marked with [BRACKETS]
+- Comments explaining each section
+- Instructions for Claude Code usage
 
-1. **Docker Applications** - Full-stack apps for on-prem deployment (Unraid, home server)
-2. **AWS Serverless Applications** - Cloud-native microservices with auto-scaling
+**Use when:** Starting any new project
 
-## Why These Baselines?
+### `.claudecontext.docker-example`
+**Docker/On-Prem template** - Real example based on LinkedIn scraper project.
 
-### Problems They Solve
+Contains:
+- Single docker-compose application
+- SQLite database
+- Puppeteer browser automation
+- React + Go stack
+- Specific to web scraping use case
 
-❌ **Without Baselines:**
-- Reinventing architecture decisions for each project
-- Explaining requirements to Claude Code repeatedly
-- Inconsistent code patterns across projects
-- High token usage due to lack of context
-- Slow development cycles
+**Use when:** Building on-prem applications, Unraid deployments, local tools
 
-✅ **With Baselines:**
-- Copy-paste proven patterns
-- 40-60% token savings with Claude Code
-- Consistent, professional code quality
-- Faster development (20-30 min to production-ready scaffold)
-- Well-documented, maintainable projects
+### `.claudecontext.aws-example`
+**AWS Serverless template** - Real example based on SaaS dashboard project.
 
-## Technology Stack
+Contains:
+- Turborepo monorepo structure
+- Multiple microservices (user, auth, analytics, notification)
+- DynamoDB + Aurora Serverless v2
+- EventBridge for service communication
+- Multi-tenant SaaS architecture
 
-### Frontend
-- **Framework:** React 18+ with TypeScript
-- **Styling:** Tailwind CSS v3+
-- **Build Tool:** Vite
-- **State:** React Context + Hooks
-- **Testing:** Vitest + React Testing Library
+**Use when:** Building cloud-native applications, microservices, scalable SaaS
 
-### Backend
-- **Language:** Go 1.21+
-- **Framework:** Gin (HTTP router)
-- **Testing:** Go standard testing + testify
-- **Logging:** Structured JSON (zap)
+## How to Use These Examples
 
-### Databases
-- **Relational:** PostgreSQL 15+ (Docker) / Aurora Serverless v2 (AWS)
-- **Document:** MongoDB 7+ (Docker) / DynamoDB (AWS)
-- **Migrations:** golang-migrate/migrate
-
-### Infrastructure
-- **Docker:** Docker Compose v2+
-- **AWS:** CDK with TypeScript
-- **Mono-repo:** Turborepo
-- **CI/CD:** GitHub Actions
-
-## Document Index
-
-| # | Document | Purpose | When to Read |
-|---|----------|---------|--------------|
-| [00](./00-OVERVIEW.md) | **Overview** | Entry point, decision tree | Start here |
-| [01](./01-ARCHITECTURE-PATTERNS.md) | **Architecture Patterns** | When to split services, DB choices | Planning new project |
-| [02](./02-PROJECT-STRUCTURE.md) | **Project Structure** | Directory layouts, file organization | Setting up repo |
-| [03](./03-FRONTEND-STANDARDS.md) | **Frontend Standards** | React, Tailwind, component library | Building UI |
-| [04](./04-BACKEND-STANDARDS.md) | **Backend Standards** | Go, Gin, API design | Building APIs |
-| [05](./05-DATABASE-STANDARDS.md) | **Database Standards** | Schema design, migrations | Database work |
-| [06](./06-TESTING-STANDARDS.md) | **Testing Standards** | Test structure, coverage | Writing tests |
-| [07](./07-CICD-WORKFLOWS.md) | **CI/CD Workflows** | GitHub Actions templates | Setting up automation |
-| [08](./08-DEPLOYMENT-DOCKER.md) | **Docker Deployment** | Docker Compose, health checks | Docker deployment |
-| [09](./09-DEPLOYMENT-AWS.md) | **AWS Deployment** | CDK, best practices | AWS deployment |
-| [10](./10-DOCUMENTATION-GUIDE.md) | **Documentation Guide** | How to document for Claude | Creating docs |
-| [11](./11-CLAUDE-CODE-OPTIMIZATION.md) | **Claude Code Optimization** | **Token efficiency strategies** | **Before every session** |
-| [12](./12-QUICK-START.md) | **Quick Start Guide** | **Get running in 20 minutes** | **First time setup** |
-
-## Quick Navigation
-
-### I Want To...
-
-**Start a new project**
-→ Read [12-QUICK-START.md](./12-QUICK-START.md)
-
-**Optimize Claude Code usage**
-→ Read [11-CLAUDE-CODE-OPTIMIZATION.md](./11-CLAUDE-CODE-OPTIMIZATION.md)
-
-**Decide between Docker and AWS**
-→ Read [01-ARCHITECTURE-PATTERNS.md](./01-ARCHITECTURE-PATTERNS.md#when-to-use-docker-vs-aws-serverless)
-
-**Set up CI/CD**
-→ Read [07-CICD-WORKFLOWS.md](./07-CICD-WORKFLOWS.md)
-
-**Create shared UI components**
-→ Read [03-FRONTEND-STANDARDS.md](./03-FRONTEND-STANDARDS.md#shared-component-library-repoui)
-
-**Design database schema**
-→ Read [05-DATABASE-STANDARDS.md](./05-DATABASE-STANDARDS.md)
-
-## Getting Started (5 Minutes)
-
-### 1. Choose Your Project Type
-
-**Docker (On-Prem):**
-```bash
-# For: Unraid, home server, local development
-# Benefits: Full control, no cloud costs
-# Use when: Hosting locally, consistent workload
-```
-
-**AWS Serverless:**
-```bash
-# For: Cloud deployment, auto-scaling
-# Benefits: Pay-per-use, managed services
-# Use when: Variable traffic, global distribution
-```
-
-### 2. Create .claudecontext File
-
-This is the **single most important** file for Claude Code efficiency.
+### 1. Choose Your Template
 
 ```bash
-# In your project root
-touch .claudecontext
+# For Docker projects
+cp examples/.claudecontext.docker-example .claudecontext
+
+# For AWS Serverless projects
+cp examples/.claudecontext.aws-example .claudecontext
+
+# For any project (start from scratch)
+cp examples/.claudecontext.example .claudecontext
 ```
 
-Copy template from [10-DOCUMENTATION-GUIDE.md](./10-DOCUMENTATION-GUIDE.md#the-claudecontext-file-essential)
+### 2. Customize for Your Project
 
-### 3. Follow Quick Start
+Edit the `.claudecontext` file:
 
-See [12-QUICK-START.md](./12-QUICK-START.md) for complete setup in 20-30 minutes.
+```markdown
+# Change project name
+# Project: [YOUR_PROJECT_NAME]
 
-## Key Concepts
+# Update tech stack if different
+Stack: React TypeScript Tailwind | Go Gin | PostgreSQL
 
-### Token Efficiency Philosophy
+# Define your database schema
+Schema: your_table: {id, fields, created_at}
 
-These baselines are designed to minimize Claude Code token usage:
+# List your API endpoints
+API: GET /your-resource, POST /your-resource
 
-```
-Traditional Approach:
-"Create a user management system..."
-→ Claude asks 10 questions
-→ Back-and-forth explanations
-→ 5,000+ tokens
-
-Baseline Approach:
-"Create UserService following pattern in .claudecontext"
-→ Claude reads context
-→ Immediate implementation
-→ 800 tokens
-
-Savings: 84% tokens
+# Add project-specific notes
 ```
 
-### The ".claudecontext" File
-
-Every project has a `.claudecontext` file that provides:
-- Tech stack overview
-- Architecture decisions
-- Database schema
-- API endpoints
-- Key patterns
-- File locations
-
-**Impact:** 40-60% token reduction when working with Claude Code
-
-### Progressive Complexity
-
-Start simple, add complexity only when needed:
+### 3. Reference in Claude Code Prompts
 
 ```
-Project Evolution:
-1. Single service (< 3,000 lines)
-2. Split when > 5,000 lines or > 15 endpoints
-3. Add caching when needed
-4. Add distributed systems when justified
+"Read .claudecontext for project patterns. Create OrderService 
+following baseline standards at 
+https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md"
 ```
 
-### Reference Existing Patterns
+## What to Include in Your .claudecontext
 
-Instead of explaining requirements in detail:
+### Essential Sections
 
+1. **Project Type** - Docker or AWS Serverless
+2. **Baseline Standards Reference** - Link to GitHub repo
+3. **Tech Stack** - Exact versions and frameworks
+4. **Database Schema** - Complete table definitions
+5. **API Endpoints** - All routes with HTTP methods
+6. **File Locations** - Where to find handlers, services, etc.
+
+### Optional but Helpful
+
+7. **Environment Variables** - Required config
+8. **External Integrations** - Third-party services
+9. **Development Commands** - Common tasks
+10. **Special Considerations** - Important context
+
+### Keep It Current
+
+Update `.claudecontext` when:
+- ✅ Adding new services or endpoints
+- ✅ Changing database schema
+- ✅ Modifying architecture
+- ✅ Adding external integrations
+
+Don't update for:
+- ❌ Small bug fixes
+- ❌ Styling changes
+- ❌ Internal refactoring (unless pattern changes)
+
+## Examples by Use Case
+
+### Simple CRUD App (Docker)
+```markdown
+# Project: Task Manager
+Type: Docker
+Stack: React TypeScript | Go Gin | PostgreSQL
+Schema: 
+  tasks: {id, title, description, status, user_id, due_date, created_at}
+  users: {id, email, name, created_at}
+API:
+  GET /tasks - List tasks
+  POST /tasks - Create task
+  PATCH /tasks/:id - Update task
 ```
-❌ "I need to create an order service with CRUD operations,
-validation, error handling, and proper response formats..."
 
-✅ "Create OrderService following UserService pattern.
-Replace User with Order {id, items[], total}"
-
-Savings: 40% tokens
+### Microservices (AWS)
+```markdown
+# Project: E-commerce Platform
+Type: AWS Serverless
+Services:
+  - product-service: Product catalog, inventory
+  - order-service: Order management, checkout
+  - payment-service: Stripe integration, billing
+Stack: React TypeScript | Go Lambda | DynamoDB
+Event Bus: EventBridge for order.created → payment-service
 ```
 
-## Cost Estimates
-
-### Docker (On-Prem)
-- Hardware: One-time cost (if using existing server: $0)
-- Electricity: ~$5-10/month
-- Domain/SSL: ~$12/year (optional)
-
-### AWS Serverless (Low Traffic POC)
-- Lambda: Free tier covers most usage
-- DynamoDB: Free tier (25GB, 25 RCU/WCU)
-- API Gateway: Free tier (1M requests/month)
-- **Typical POC cost:** < $5-10/month
-
-## File Structure
-
-```
-baseline-docs/
-├── 00-OVERVIEW.md                    # This file
-├── 01-ARCHITECTURE-PATTERNS.md       # Decisions & patterns
-├── 02-PROJECT-STRUCTURE.md           # Directory layouts
-├── 03-FRONTEND-STANDARDS.md          # React + Tailwind
-├── 04-BACKEND-STANDARDS.md           # Go + Gin
-├── 05-DATABASE-STANDARDS.md          # PostgreSQL, DynamoDB, etc.
-├── 06-TESTING-STANDARDS.md           # Test strategies
-├── 07-CICD-WORKFLOWS.md              # GitHub Actions
-├── 08-DEPLOYMENT-DOCKER.md           # Docker deployment
-├── 09-DEPLOYMENT-AWS.md              # AWS deployment
-├── 10-DOCUMENTATION-GUIDE.md         # How to document
-├── 11-CLAUDE-CODE-OPTIMIZATION.md    # Token efficiency ⭐
-├── 12-QUICK-START.md                 # 20-min setup ⭐
-└── README.md                         # This file
+### Data Pipeline (AWS)
+```markdown
+# Project: Analytics Pipeline
+Type: AWS Serverless
+Stack: Python Lambda | S3 | Athena | Glue
+Flow: S3 event → Lambda → Glue ETL → Athena queries
+Data: Customer behavior logs, click streams
+Output: Aggregated metrics in Athena tables
 ```
 
-## Common Workflows
+## Baseline Standards Reference
 
-### New Feature Development
+All examples reference: https://github.com/vestgoteUptive/claude-baseline
 
+### What's in the Baseline Repo
+
+- **CORE-PATTERNS.md** - Essential patterns (~5KB) - Copy into your project
+- **LLM-OPTIMIZED-STANDARDS.md** - Complete standards optimized for LLM (~15KB)
+- **Full Documentation** - Human-friendly guides for architecture, frontend, backend, etc.
+
+### How to Use with Claude Code
+
+**Option 1: Reference GitHub URL**
+```
+"Following patterns from 
+https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md
+create UserService..."
+```
+
+**Option 2: Copy Locally**
 ```bash
-1. Create feature doc (if complex)
-   docs/features/my-feature.md
-
-2. Update .claudecontext (if architecture changes)
-
-3. Prompt Claude Code:
-   "Implement feature per docs/features/my-feature.md.
-    Follow patterns in .claudecontext."
-
-4. Test locally
-   docker-compose up -d  # or npm run dev
-
-5. Commit & push (CI/CD runs automatically)
+# In your project
+mkdir .standards
+curl https://raw.githubusercontent.com/vestgoteUptive/claude-baseline/main/CORE-PATTERNS.md > .standards/CORE-PATTERNS.md
 ```
 
-### Bug Fix
+Then in .claudecontext:
+```markdown
+Local: .standards/CORE-PATTERNS.md
+```
 
+Prompt:
+```
+"Read .standards/CORE-PATTERNS.md and .claudecontext. Create UserService..."
+```
+
+## Token Efficiency Tips
+
+### ✅ Do This
+
+**Concise .claudecontext:**
+```markdown
+Schema: users: {id, email, name, created_at}
+API: GET /users, POST /users, PATCH /users/:id
+Patterns: .standards/CORE-PATTERNS.md
+```
+
+**Clear prompts:**
+```
+"Read .claudecontext. Create OrderService following UserService pattern."
+```
+
+### ❌ Don't Do This
+
+**Verbose .claudecontext:**
+```markdown
+The users table stores all user information including their unique identifier,
+email address (which must be unique), their full name, and the timestamp of
+when the account was created. The email field is validated to ensure it's a
+proper email format...
+[excessive explanation]
+```
+
+**Vague prompts:**
+```
+"I need help with creating some kind of service for orders, not sure exactly
+how to structure it, what do you think?"
+```
+
+## Version Control
+
+Track your baseline version in .claudecontext:
+
+```markdown
+## Baseline Standards
+Primary: https://github.com/vestgoteUptive/claude-baseline
+Version: v1.0.0
+Last Updated: 2026-01-14
+```
+
+When baselines update:
 ```bash
-1. Identify issue
-2. Prompt Claude Code:
-   "Fix error in services/user-service/internal/handlers/user.go:45
-    Error: [paste error message]
-    Expected: [describe expected behavior]"
+# Update local copy
+curl https://raw.githubusercontent.com/vestgoteUptive/claude-baseline/v1.1.0/CORE-PATTERNS.md > .standards/CORE-PATTERNS.md
 
-3. Test fix
-4. Commit & push
+# Update version in .claudecontext
+# Version: v1.1.0
 ```
 
-### Adding a Microservice (AWS)
+## Questions?
 
-```bash
-1. Check if justified:
-   - Service > 5,000 lines? ✓
-   - Different scaling needs? ✓
-   - Different data access? ✓
+See the main baseline documentation:
+https://github.com/vestgoteUptive/claude-baseline/blob/main/README.md
 
-2. Create structure:
-   services/new-service/
-
-3. Prompt Claude Code:
-   "Create new-service following user-service pattern.
-    Service handles: [brief description]
-    Database: DynamoDB
-    Endpoints: [list]"
-
-4. Update infrastructure:
-   "Add new-service to infrastructure/lib/stacks/api-stack.ts"
-```
-
-## Best Practices Summary
-
-### Always
-✅ Create `.claudecontext` file in project root  
-✅ Keep services small and focused (< 5,000 lines)  
-✅ Use structured logging (JSON format)  
-✅ Write tests for business logic  
-✅ Reference existing patterns in prompts  
-✅ Update OpenAPI spec when API changes  
-
-### Never
-❌ Commit secrets or API keys  
-❌ Skip health checks in production  
-❌ Create circular dependencies between services  
-❌ Use `any` type in TypeScript  
-❌ Skip database migrations  
-❌ Explain the same pattern twice to Claude  
-
-## Troubleshooting
-
-### Claude Code Uses Too Many Tokens
-
-**Solution:** Review [11-CLAUDE-CODE-OPTIMIZATION.md](./11-CLAUDE-CODE-OPTIMIZATION.md)
-
-Common fixes:
-- Add/update `.claudecontext` file
-- Use "follow pattern" approach
-- Batch related changes
-- Provide error messages directly
-
-### Docker Build Fails
-
-```bash
-# Clear cache and rebuild
-docker-compose down
-docker system prune -a
-docker-compose build --no-cache
-docker-compose up -d
-```
-
-### AWS Deploy Fails
-
-```bash
-# Check CDK bootstrap
-cd infrastructure
-npx cdk bootstrap
-
-# Check IAM permissions
-aws sts get-caller-identity
-
-# Verbose output
-npx cdk deploy --all --verbose
-```
-
-### Tests Failing in CI/CD
-
-```bash
-# Run locally first
-npm test
-
-# Check if env vars are set in GitHub Secrets
-# Check if dependencies are installed
-npm ci  # Not npm install
-```
-
-## Examples
-
-### Real-World Project: LinkedIn Scraper
-
-See `.claudecontext` example in [10-DOCUMENTATION-GUIDE.md](./10-DOCUMENTATION-GUIDE.md#real-example)
-
-**Setup time:** 25 minutes  
-**Token usage:** ~1,200 (initial) + ~600 (refinements)  
-**Result:** Production-ready scraper with API
-
-### Real-World Project: E-commerce API
-
-**Architecture:**
-- AWS Serverless (DynamoDB + Lambda)
-- 3 microservices (user, product, order)
-- React frontend (S3 + CloudFront)
-
-**Development:**
-- Initial scaffold: 30 minutes
-- 3 core features: 4 hours (with Claude Code)
-- Total tokens: ~8,000 (would be ~25,000 without baselines)
-
-## Maintenance
-
-### Updating Standards
-
-These baselines evolve. When updating:
-
-1. Document reason in git commit
-2. Update version in this README
-3. Update affected projects gradually
-4. Keep backwards compatibility when possible
-
-### Version History
-
-- **1.0.0** (2026-01-14) - Initial release
-  - Docker and AWS templates
-  - Claude Code optimization guide
-  - Comprehensive documentation
-
-## Contributing
-
-Found an improvement? Create an issue or PR!
-
-### Contribution Guidelines
-
-1. **Simplicity:** Keep it simple and practical
-2. **Token Efficiency:** Focus on reducing Claude Code tokens
-3. **Real Examples:** Provide working code examples
-4. **Documentation:** Update relevant docs
-
-## Support
-
-### Getting Help
-
-1. **Read the docs** - Most answers are here
-2. **Check examples** - See real implementations
-3. **GitHub Issues** - For bugs or questions
-
-### Feedback
-
-This is a living document. Your feedback helps improve it:
-
-- What worked well?
-- What was confusing?
-- What's missing?
-
-## License
-
-MIT License - Use freely in your projects
-
----
-
-## Next Steps
-
-1. **First time?** Read [12-QUICK-START.md](./12-QUICK-START.md)
-2. **Using Claude Code?** Read [11-CLAUDE-CODE-OPTIMIZATION.md](./11-CLAUDE-CODE-OPTIMIZATION.md)
-3. **Ready to build?** Create your `.claudecontext` file and start coding!
-
----
-
-**Built by Henrik for efficient Claude Code development**  
-**Questions? Create an issue in the repository**
+Or check specific guides:
+- [Quick Start](https://github.com/vestgoteUptive/claude-baseline/blob/main/12-QUICK-START.md)
+- [Claude Code Optimization](https://github.com/vestgoteUptive/claude-baseline/blob/main/11-CLAUDE-CODE-OPTIMIZATION.md)
+- [Documentation Guide](https://github.com/vestgoteUptive/claude-baseline/blob/main/10-DOCUMENTATION-GUIDE.md)

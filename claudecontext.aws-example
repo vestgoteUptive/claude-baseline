@@ -1,0 +1,426 @@
+# .claudecontext - AWS Serverless Example
+
+# Project: Multi-Tenant SaaS Dashboard
+
+## Project Type
+[ ] Docker Application (On-Prem)
+[X] AWS Serverless (Mono-repo)
+
+## Baseline Standards
+Primary: https://github.com/vestgoteUptive/claude-baseline
+Core Patterns: https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md
+LLM Optimized: https://github.com/vestgoteUptive/claude-baseline/blob/main/LLM-OPTIMIZED-STANDARDS.md
+Local: .standards/CORE-PATTERNS.md
+
+## Tech Stack
+
+Frontend: React 18 TypeScript Tailwind Vite (S3 + CloudFront)
+Backend: Go 1.21 Lambda (ARM64)
+Database: DynamoDB + Aurora Serverless v2 (PostgreSQL)
+Infrastructure: AWS CDK TypeScript
+Monorepo: Turborepo
+Authentication: AWS Cognito
+API: API Gateway HTTP API (REST)
+
+## Architecture
+
+Microservices architecture with:
+
+### Services
+- **user-service**: User management, profiles, preferences
+- **auth-service**: JWT validation, Cognito integration, session management
+- **analytics-service**: Usage tracking, metrics, reporting (Aurora for analytics queries)
+- **notification-service**: Email/SMS notifications via SES/SNS
+
+### Data Storage
+- DynamoDB: User profiles, sessions, real-time data
+- Aurora Serverless v2: Analytics data, complex queries, reports
+
+### Frontend
+- React SPA hosted on S3
+- CloudFront distribution for global CDN
+- Cognito authentication
+
+### Event Flow
+- API Gateway → Lambda functions
+- Lambda → DynamoDB/Aurora
+- Lambda → EventBridge (for async events)
+- EventBridge → Notification service
+
+## Database Schema
+
+### DynamoDB Table: app-data
+
+```
+Single-table design:
+
+# User Profile
+PK: USER#[user_id]
+SK: PROFILE
+Attributes: email, name, company, role, subscription_tier, created_at
+
+# User Session
+PK: USER#[user_id]
+SK: SESSION#[session_id]
+Attributes: token_hash, expires_at, device_info
+
+# Usage Metrics
+PK: USER#[user_id]
+SK: METRIC#[date]#[metric_type]
+Attributes: value, timestamp
+
+# GSI: email-index
+PK: email
+SK: (none)
+Purpose: Find user by email
+
+# GSI: subscription-index
+PK: subscription_tier
+SK: created_at
+Purpose: List users by subscription tier
+```
+
+### Aurora Serverless v2: analytics-db
+
+```sql
+-- Analytics events (append-only)
+CREATE TABLE analytics_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    event_type VARCHAR(100) NOT NULL,
+    event_data JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_analytics_user_time ON analytics_events(user_id, created_at DESC);
+CREATE INDEX idx_analytics_type_time ON analytics_events(event_type, created_at DESC);
+
+-- Aggregated reports (materialized view)
+CREATE TABLE daily_user_stats (
+    date DATE NOT NULL,
+    user_id UUID NOT NULL,
+    total_events INTEGER DEFAULT 0,
+    active_minutes INTEGER DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (date, user_id)
+);
+
+CREATE INDEX idx_daily_stats_date ON daily_user_stats(date DESC);
+```
+
+## API Endpoints
+
+### Authentication (auth-service)
+- POST /api/v1/auth/login - Login with Cognito (returns JWT)
+- POST /api/v1/auth/logout - Logout and invalidate session
+- POST /api/v1/auth/refresh - Refresh JWT token
+- POST /api/v1/auth/signup - Create new user account
+
+### Users (user-service)
+- GET /api/v1/users/me - Get current user profile
+- PATCH /api/v1/users/me - Update current user profile
+- GET /api/v1/users/:id - Get user by ID (admin only)
+- GET /api/v1/users - List users (admin only, pagination)
+
+### Analytics (analytics-service)
+- POST /api/v1/analytics/track - Track event
+- GET /api/v1/analytics/dashboard - Get dashboard metrics for current user
+- GET /api/v1/analytics/reports/:type - Generate report (daily/weekly/monthly)
+- GET /api/v1/analytics/export - Export data as CSV (admin only)
+
+### Notifications (notification-service)
+- POST /api/v1/notifications/send - Send notification (internal, EventBridge triggered)
+- GET /api/v1/notifications/preferences - Get user notification preferences
+- PATCH /api/v1/notifications/preferences - Update preferences
+
+## Environment Variables
+
+Per Lambda function:
+
+```bash
+# Shared
+AWS_REGION=us-east-1
+ENVIRONMENT=production
+LOG_LEVEL=info
+
+# user-service
+DYNAMODB_TABLE_NAME=app-data
+COGNITO_USER_POOL_ID=us-east-1_xxxxx
+
+# auth-service
+COGNITO_USER_POOL_ID=us-east-1_xxxxx
+COGNITO_CLIENT_ID=xxxxx
+JWT_SECRET_ARN=arn:aws:secretsmanager:us-east-1:xxx
+SESSION_DURATION_HOURS=24
+
+# analytics-service
+AURORA_SECRET_ARN=arn:aws:secretsmanager:us-east-1:xxx
+AURORA_CLUSTER_ARN=arn:aws:rds:us-east-1:xxx
+DYNAMODB_TABLE_NAME=app-data
+EVENT_BUS_NAME=analytics-events
+
+# notification-service
+SES_FROM_EMAIL=noreply@yourdomain.com
+SNS_TOPIC_ARN=arn:aws:sns:us-east-1:xxx
+```
+
+## Key Patterns & Conventions
+
+### API Response Format
+```json
+{
+  "data": {...},
+  "error": {"code": "", "message": "", "details": {}},
+  "metadata": {"timestamp": "", "request_id": ""}
+}
+```
+
+### Lambda Handler Pattern
+```go
+func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+    // Route based on HTTP method and path
+    switch {
+    case request.RouteKey == "GET /users/{id}":
+        return handlers.GetUser(ctx, request, userService, logger)
+    // ...
+    }
+}
+```
+
+### Service Communication
+- Synchronous: Lambda → API Gateway → Lambda (for user-facing requests)
+- Asynchronous: Lambda → EventBridge → Lambda (for background tasks)
+- Example: Track event → EventBridge → Notification service
+
+### Error Handling
+- Lambda errors logged to CloudWatch
+- X-Ray tracing enabled for all Lambdas
+- Errors returned as dto.Error with appropriate HTTP status codes
+
+## File Locations
+
+### Monorepo Structure
+```
+project/
+├── apps/
+│   └── web/                          # Frontend React app
+│       └── src/{components,pages,hooks,contexts,lib}
+├── packages/
+│   ├── ui/                           # Shared component library
+│   ├── api-types/                    # Shared TypeScript types
+│   └── eslint-config/                # Shared ESLint config
+├── services/
+│   ├── user-service/
+│   │   ├── cmd/lambda/main.go
+│   │   └── internal/{handlers,models,repository,service}
+│   ├── auth-service/
+│   ├── analytics-service/
+│   └── notification-service/
+├── infrastructure/
+│   ├── bin/infrastructure.ts
+│   └── lib/
+│       ├── stacks/{api,database,frontend,auth,monitoring}-stack.ts
+│       └── constructs/{lambda-function,api-gateway}.ts
+├── .standards/CORE-PATTERNS.md
+├── .claudecontext
+└── turbo.json
+```
+
+### Service Structure (user-service example)
+```
+services/user-service/
+├── cmd/lambda/main.go                # Lambda entry point
+├── internal/
+│   ├── handlers/                     # HTTP handlers
+│   │   ├── get_user.go
+│   │   ├── update_user.go
+│   │   └── list_users.go
+│   ├── models/user.go                # User domain model
+│   ├── repository/                   # Data access
+│   │   └── dynamodb_user_repo.go
+│   └── service/user_service.go       # Business logic
+├── docs/openapi.yaml                 # OpenAPI spec
+├── go.mod
+└── Makefile
+```
+
+## External Integrations
+
+### AWS Cognito
+- Purpose: User authentication, JWT tokens
+- User Pool: Multi-tenant with email verification
+- MFA: Optional (configurable per user)
+- Social login: Google, GitHub (configured in Cognito)
+
+### AWS EventBridge
+- Purpose: Async event distribution between services
+- Event bus: analytics-events
+- Rules: Route events to appropriate Lambdas
+- Examples:
+  - user.created → notification-service (send welcome email)
+  - analytics.tracked → analytics-service (aggregate metrics)
+
+### AWS SES
+- Purpose: Transactional emails
+- Verified sender: noreply@yourdomain.com
+- Templates: Welcome, password reset, notifications
+
+### AWS X-Ray
+- Purpose: Distributed tracing across services
+- Enabled: All Lambda functions
+- Use: Debug performance bottlenecks, trace request flows
+
+## Development Commands
+
+### Monorepo
+```bash
+# Install dependencies
+npm install
+
+# Run all tests
+npm run test
+
+# Build all packages
+npm run build
+
+# Develop frontend
+cd apps/web && npm run dev
+
+# Develop specific service
+cd services/user-service && go run cmd/lambda/main.go
+```
+
+### Infrastructure
+```bash
+cd infrastructure
+
+# Synthesize CloudFormation
+npx cdk synth
+
+# Diff against deployed
+npx cdk diff
+
+# Deploy all stacks
+npx cdk deploy --all
+
+# Deploy specific stack
+npx cdk deploy UserServiceStack
+```
+
+### Lambda Local Testing
+```bash
+# Build Lambda
+cd services/user-service
+GOOS=linux GOARCH=arm64 go build -o bootstrap cmd/lambda/main.go
+
+# Test with SAM Local (optional)
+sam local invoke UserFunction --event test-event.json
+```
+
+## Testing Strategy
+
+### Unit Tests
+- Each service has unit tests for business logic
+- Mock repositories for service layer tests
+- Mock DynamoDB/Aurora clients for repository tests
+- Target: >80% coverage for services
+
+### Integration Tests
+- API Gateway → Lambda integration tested in staging
+- EventBridge event routing tested with test events
+- DynamoDB operations tested with local DynamoDB
+
+### E2E Tests
+- Frontend E2E with Playwright (critical user flows)
+- Runs in staging environment before production deploy
+
+## Special Considerations
+
+### Cost Optimization
+- Lambda: ARM64 for 20% cost savings, 512MB memory (tune per function)
+- DynamoDB: On-demand billing for unpredictable traffic
+- Aurora: Serverless v2, scales down to 0.5 ACU when idle
+- CloudFront: Cache static assets aggressively (1 year TTL)
+- Expected cost: $10-30/month for low traffic
+
+### Security
+- All Lambdas use least-privilege IAM roles
+- Secrets stored in AWS Secrets Manager
+- API Gateway throttling: 100 req/sec per account
+- CORS configured for specific origins only
+- JWT tokens expire after 24 hours
+
+### Monitoring
+- CloudWatch Logs: All Lambda logs with structured JSON
+- CloudWatch Alarms: Lambda errors, DynamoDB throttles, API 5xx errors
+- X-Ray: Distributed tracing for all requests
+- Custom metrics: Track business KPIs (user signups, active users)
+
+### Scaling
+- Lambda: Concurrent executions (default 1000, can increase)
+- DynamoDB: Auto-scaling RCU/WCU (on-demand handles spikes)
+- Aurora: Auto-scales from 0.5 to 16 ACU based on load
+- API Gateway: No scaling needed (AWS managed)
+
+## Recent Architectural Decisions
+
+### Use DynamoDB for User Data, Aurora for Analytics
+Date: 2026-01-14
+- Decision: Hybrid database approach
+- Reasoning: 
+  - DynamoDB: Fast key-value lookups for user profiles, sessions
+  - Aurora: Complex analytics queries, JOINs, reporting
+- Impact: Dual data access patterns, slightly more complexity, but optimized for each use case
+
+### Single Lambda per Service Route
+Date: 2026-01-14
+- Decision: One Lambda function per service, routing internally
+- Reasoning: Simpler than one Lambda per endpoint, cold start optimization
+- Impact: Larger Lambda code size, but fewer cold starts
+
+### EventBridge for Service Communication
+Date: 2026-01-14
+- Decision: Use EventBridge instead of direct Lambda invocations
+- Reasoning: Decouples services, easier to add new subscribers
+- Impact: Eventual consistency, but better scalability
+
+## Project-Specific Notes
+
+- Multi-tenant SaaS with subscription tiers (free, pro, enterprise)
+- User data isolated by tenant (user_id in all queries)
+- Analytics data aggregated nightly (Lambda scheduled via EventBridge)
+- Frontend uses React Query for caching and optimistic updates
+- Deployed to us-east-1 (primary), replicate to us-west-2 if needed
+
+---
+
+## Claude Code Usage
+
+### New Service
+```
+"Read .claudecontext and https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md
+Create billing-service following user-service pattern.
+Endpoints: GET /subscriptions, POST /subscriptions/upgrade
+DynamoDB: PK: USER#[id], SK: SUBSCRIPTION"
+```
+
+### New Feature in Existing Service
+```
+"Context: .claudecontext. Add export-to-csv feature to analytics-service.
+Endpoint: GET /api/v1/analytics/export?start_date&end_date
+Query Aurora, return CSV response.
+Follow service layer pattern."
+```
+
+### Infrastructure Change
+```
+"Context: .claudecontext CDK patterns. Add CloudWatch alarm to user-service Lambda
+Alert on: Error rate >5% in 5 minutes
+SNS topic: alert-topic-arn from environment"
+```
+
+---
+
+Last Updated: 2026-01-14
+Baseline Version: v1.0.0
+Author: Henrik
