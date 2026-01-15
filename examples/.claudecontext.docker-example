@@ -11,6 +11,20 @@ Primary: https://github.com/vestgoteUptive/claude-baseline
 Core Patterns: https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md
 Local: .standards/CORE-PATTERNS.md
 
+## Claude Response Constraints
+
+**Token Efficiency Mode: ENABLED**
+- Output format: Diffs only (no full files unless explicitly requested)
+- Explanations: None unless explicitly requested
+- Reasoning: Skip step-by-step unless debugging complex issue
+- Token target: <150 per response (can exceed for complex changes)
+- Uncertainty: Ask ONE short clarifying question
+- No changes: Reply "No changes needed"
+- Trust: Assume tests, types, and architecture are correct
+- Redesigns: Only if explicitly requested
+
+See [TOKEN-MINIMIZATION-RULES.md](https://github.com/vestgoteUptive/claude-baseline/blob/main/TOKEN-MINIMIZATION-RULES.md)
+
 ## Tech Stack
 
 Frontend: React 18 TypeScript Tailwind Vite
@@ -242,9 +256,11 @@ Date: 2026-01-14
 
 ### Starting New Feature
 ```
-"Read .claudecontext. Following patterns from 
+"Read .claudecontext. Following patterns from
 https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md
-create ExportService to export connections to CSV format."
+create ExportService to export connections to CSV format.
+
+Constraints: Diff only, no explanations, <200 tokens"
 ```
 
 ### Fixing Scraper Issues
@@ -252,13 +268,17 @@ create ExportService to export connections to CSV format."
 "Context: .claudecontext. Fix error in internal/scraper/linkedin.go:67
 Error: 'timeout waiting for selector .connection-card'
 This happens when LinkedIn changes their HTML structure.
-Update selector constants in selectors.go and retry logic."
+Update selector constants in selectors.go and retry logic.
+
+Constraints: Diff only, <100 tokens"
 ```
 
 ### Adding Visualization
 ```
-"Following .claudecontext frontend patterns, create GraphVisualization component 
-that uses D3.js to render the relationship graph from /api/v1/graph endpoint."
+"Following .claudecontext frontend patterns, create GraphVisualization component
+that uses D3.js to render the relationship graph from /api/v1/graph endpoint.
+
+Constraints: Diff only, no explanations, <200 tokens"
 ```
 
 ---

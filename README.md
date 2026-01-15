@@ -95,10 +95,28 @@ https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md"
 
 ### Optional but Helpful
 
-7. **Environment Variables** - Required config
-8. **External Integrations** - Third-party services
-9. **Development Commands** - Common tasks
-10. **Special Considerations** - Important context
+7. **Claude Response Constraints** - Token efficiency mode (NEW)
+8. **Environment Variables** - Required config
+9. **External Integrations** - Third-party services
+10. **Development Commands** - Common tasks
+11. **Special Considerations** - Important context
+
+### NEW: Token Minimization (Recommended)
+
+Add this section to your `.claudecontext` for 50-70% token reduction:
+
+```markdown
+## Claude Response Constraints
+
+**Token Efficiency Mode: ENABLED**
+- Output format: Diffs only (no full files unless explicitly requested)
+- Explanations: None unless explicitly requested
+- Token target: <150 per response
+- No changes: Reply "No changes needed"
+- Trust: Assume tests, types, and architecture are correct
+```
+
+**See:** [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md) for complete guide
 
 ### Keep It Current
 

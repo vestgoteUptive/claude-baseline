@@ -12,6 +12,20 @@ Core Patterns: https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-
 LLM Optimized: https://github.com/vestgoteUptive/claude-baseline/blob/main/LLM-OPTIMIZED-STANDARDS.md
 Local: .standards/CORE-PATTERNS.md
 
+## Claude Response Constraints
+
+**Token Efficiency Mode: ENABLED**
+- Output format: Diffs only (no full files unless explicitly requested)
+- Explanations: None unless explicitly requested
+- Reasoning: Skip step-by-step unless debugging complex issue
+- Token target: <150 per response (can exceed for complex changes)
+- Uncertainty: Ask ONE short clarifying question
+- No changes: Reply "No changes needed"
+- Trust: Assume tests, types, and architecture are correct
+- Redesigns: Only if explicitly requested
+
+See [TOKEN-MINIMIZATION-RULES.md](https://github.com/vestgoteUptive/claude-baseline/blob/main/TOKEN-MINIMIZATION-RULES.md)
+
 ## Tech Stack
 
 Frontend: React 18 TypeScript Tailwind Vite (S3 + CloudFront)
@@ -401,7 +415,9 @@ Date: 2026-01-14
 "Read .claudecontext and https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md
 Create billing-service following user-service pattern.
 Endpoints: GET /subscriptions, POST /subscriptions/upgrade
-DynamoDB: PK: USER#[id], SK: SUBSCRIPTION"
+DynamoDB: PK: USER#[id], SK: SUBSCRIPTION
+
+Constraints: Diff only, no explanations, <250 tokens"
 ```
 
 ### New Feature in Existing Service
@@ -409,14 +425,18 @@ DynamoDB: PK: USER#[id], SK: SUBSCRIPTION"
 "Context: .claudecontext. Add export-to-csv feature to analytics-service.
 Endpoint: GET /api/v1/analytics/export?start_date&end_date
 Query Aurora, return CSV response.
-Follow service layer pattern."
+Follow service layer pattern.
+
+Constraints: Diff only, <150 tokens"
 ```
 
 ### Infrastructure Change
 ```
 "Context: .claudecontext CDK patterns. Add CloudWatch alarm to user-service Lambda
 Alert on: Error rate >5% in 5 minutes
-SNS topic: alert-topic-arn from environment"
+SNS topic: alert-topic-arn from environment
+
+Constraints: Diff only, <100 tokens"
 ```
 
 ---

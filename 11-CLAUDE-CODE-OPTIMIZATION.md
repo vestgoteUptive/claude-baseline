@@ -4,6 +4,37 @@
 
 This document provides strategies to minimize token usage when working with Claude Code while maximizing code quality and development speed.
 
+> **🔥 NEW: Aggressive Token Minimization**
+> See [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md) for copy-paste behavior contracts that can reduce token usage by 50-70%.
+> This guide focuses on **context efficiency**, while TOKEN-MINIMIZATION-RULES.md focuses on **response efficiency**.
+
+---
+
+## Quick Start: Token Minimization
+
+### Add to Every Prompt (Recommended)
+
+```markdown
+Constraints:
+- Diff only
+- No explanations
+- <150 tokens
+```
+
+### Add to .claudecontext (Recommended)
+
+```markdown
+## Claude Response Constraints
+- Output: Diffs only (no full files)
+- Explanations: None unless requested
+- Token limit: <150 per response
+- If no changes: Reply "No changes needed"
+```
+
+**Result:** 50-70% token reduction per session.
+
+**Details:** [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md)
+
 ---
 
 ## 1. Project Context Files
@@ -96,12 +127,17 @@ scalable and follow best practices."
 ### ✅ Efficient Prompts
 
 ```
-Create user service in services/user-service following our Go + Gin 
+Create user service in services/user-service following our Go + Gin
 pattern. Include:
 - CRUD handlers (use existing patterns from health.go)
 - DynamoDB repository (PK: USER#{id}, SK: PROFILE)
 - Service layer with email validation
 - OpenAPI spec
+
+Constraints:
+- Diff only
+- No explanations
+- <200 tokens
 
 Reference: .claudecontext for schema and patterns
 ```
@@ -111,6 +147,7 @@ Reference: .claudecontext for schema and patterns
 - References existing patterns
 - Clear requirements
 - Points to context file
+- **Constrains output format and length**
 
 ---
 
@@ -147,13 +184,15 @@ Session 3: "Add password reset flow..."
 Instead of explaining requirements in detail, reference existing code:
 
 ```
-"Create OrderService following the same pattern as UserService in 
+"Create OrderService following the same pattern as UserService in
 services/user-service. Replace User model with Order model:
 - Order has: id, user_id, items[], total, status
 - DynamoDB table with PK: ORDER#{id}
+
+Constraints: Diff only, no explanations, <200 tokens"
 ```
 
-**Token Savings:** ~40% - Claude copies proven patterns instead of generating from scratch
+**Token Savings:** ~40-60% - Claude copies proven patterns instead of generating from scratch, constraints reduce response size
 
 ---
 
@@ -571,6 +610,47 @@ Follow existing handler patterns. No tests needed yet.
 
 ---
 
+## 18. Aggressive Token Minimization (NEW)
+
+For maximum token efficiency, use the strategies in [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md):
+
+### Key Additions to Your Workflow
+
+1. **Session Initialization**
+   ```
+   Read .claudecontext. Enable token-efficiency mode:
+   - Diffs only, no explanations
+   - <150 tokens per response
+   - Trust existing code/tests
+   ```
+
+2. **Every Prompt Template**
+   ```
+   Task: [one sentence]
+   Constraints: Diff only, no explanations, <150 tokens
+   Context: .claudecontext
+   ```
+
+3. **Add to .claudecontext**
+   ```markdown
+   ## Claude Response Constraints
+   - Output: Diffs only (no full files)
+   - Explanations: None unless requested
+   - Token limit: <150 per response
+   - No changes: Reply "No changes needed"
+   ```
+
+### Expected Results
+
+- **Before:** 5,300 tokens for typical feature
+- **After:** 1,100 tokens for same feature
+- **Savings:** ~79% reduction
+
+**See:** [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md) for complete guide
+
+---
+
 **See Also:**
+- [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md) - Response efficiency (NEW)
 - [02-PROJECT-STRUCTURE.md](./02-PROJECT-STRUCTURE.md) - Standardized layouts
 - [10-DOCUMENTATION-GUIDE.md](./10-DOCUMENTATION-GUIDE.md) - Documentation strategies
