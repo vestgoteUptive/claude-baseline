@@ -7,8 +7,18 @@
 ### Current Status
 
 ✅ **Infrastructure Ready**: The multi-agent framework is in place
-✅ **Claude Code**: Runner script exists, CLI is installed
+✅ **Claude Code**: Runner script exists, CLI is installed, tested and working
+✅ **Working Directory**: Fixed to support git submodule usage
 ⚠️ **OpenCode**: Runner script exists, but CLI is not installed
+
+### Recent Updates (2026-01-15)
+
+- ✅ Fixed working directory handling - Ralph now works as a git submodule!
+- ✅ Created proper `prompt.md` with agent instructions
+- ✅ Added `--work-dir` flag for flexible project root specification
+- ✅ Auto-detection of prompt files (project-specific or default)
+- ✅ Updated prompt_builder.sh to use Ralph directory for skills
+- ✅ Comprehensive submodule usage documentation created
 
 ---
 

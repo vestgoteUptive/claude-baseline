@@ -14,6 +14,7 @@ build_effective_prompt() {
   local agent=""
   local base=""
   local state_dir=""
+  local ralph_dir=""
   local out=""
 
   while [[ $# -gt 0 ]]; do
@@ -21,13 +22,14 @@ build_effective_prompt() {
       --agent) agent="$2"; shift 2;;
       --base) base="$2"; shift 2;;
       --state-dir) state_dir="$2"; shift 2;;
+      --ralph-dir) ralph_dir="$2"; shift 2;;
       --out) out="$2"; shift 2;;
       *) echo "prompt_builder: unknown arg $1"; exit 2;;
     esac
   done
 
-  if [[ -z "$agent" || -z "$base" || -z "$state_dir" || -z "$out" ]]; then
-    echo "prompt_builder: missing required args"
+  if [[ -z "$agent" || -z "$base" || -z "$state_dir" || -z "$ralph_dir" || -z "$out" ]]; then
+    echo "prompt_builder: missing required args (agent, base, state-dir, ralph-dir, out)"
     exit 2
   fi
 
@@ -43,12 +45,12 @@ build_effective_prompt() {
     echo -e "\n\n---\n" >> "$out"
   fi
 
-  # Skills
+  # Skills (from Ralph directory)
   echo "# Loaded skills" >> "$out"
   echo >> "$out"
 
-  if [[ -d "skills/common" ]]; then
-    for f in skills/common/*.md; do
+  if [[ -d "${ralph_dir}/skills/common" ]]; then
+    for f in "${ralph_dir}/skills/common"/*.md; do
       [[ -f "$f" ]] || continue
       echo "## $(basename "$f")" >> "$out"
       echo >> "$out"
@@ -57,8 +59,8 @@ build_effective_prompt() {
     done
   fi
 
-  if [[ -d "skills/${agent}" ]]; then
-    for f in "skills/${agent}"/*.md; do
+  if [[ -d "${ralph_dir}/skills/${agent}" ]]; then
+    for f in "${ralph_dir}/skills/${agent}"/*.md; do
       [[ -f "$f" ]] || continue
       echo "## $(basename "$f")" >> "$out"
       echo >> "$out"

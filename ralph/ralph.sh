@@ -16,13 +16,28 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
+
+# IMPORTANT: Don't cd to SCRIPT_DIR - stay in project root!
+# This allows Ralph to work as a git submodule while accessing project files.
 
 AGENT="${AGENT:-amp}"                       # amp | claude | opencode
-PROMPT_FILE="${PROMPT_FILE:-prompt.md}"     # base prompt
-STATE_DIR="${STATE_DIR:-.ralph}"            # persistent state folder
+STATE_DIR="${STATE_DIR:-.ralph}"            # persistent state folder (in project root)
 MAX_ITERATIONS=0                            # 0 = infinite
 COMPLETION_TOKEN="${COMPLETION_TOKEN:-<RALPH_DONE/>}"
+
+# Prompt file: Try project root first, fallback to Ralph's default
+if [[ -n "${PROMPT_FILE:-}" ]]; then
+  # User specified a prompt file, use as-is
+  :
+elif [[ -f "${PROJECT_ROOT}/prompt.md" ]]; then
+  PROMPT_FILE="${PROJECT_ROOT}/prompt.md"
+elif [[ -f "${PROJECT_ROOT}/ralph-prompt.md" ]]; then
+  PROMPT_FILE="${PROJECT_ROOT}/ralph-prompt.md"
+else
+  # Fallback to Ralph's default prompt
+  PROMPT_FILE="${SCRIPT_DIR}/prompt.md"
+fi
 
 usage() {
   cat <<EOF
@@ -30,11 +45,34 @@ Usage: ./ralph.sh [options]
 
 Options:
   --agent <amp|claude|opencode>     Choose agent runner (or set AGENT env var)
-  --prompt <file>                  Base prompt file (default: prompt.md)
-  --state-dir <dir>                State directory (default: .ralph)
-  --max-iterations <n>             Stop after n iterations (default: 0 = infinite)
-  --completion-token <token>       Token that marks completion (default: <RALPH_DONE/>)
-  -h, --help                       Show help
+  --prompt <file>                   Base prompt file (default: auto-detect)
+  --work-dir <dir>                  Project root directory (default: current directory)
+  --state-dir <dir>                 State directory (default: .ralph in project root)
+  --max-iterations <n>              Stop after n iterations (default: 0 = infinite)
+  --completion-token <token>        Token that marks completion (default: <RALPH_DONE/>)
+  -h, --help                        Show help
+
+Prompt file detection (in order):
+  1. --prompt <file> (if specified)
+  2. PROJECT_ROOT/prompt.md
+  3. PROJECT_ROOT/ralph-prompt.md
+  4. RALPH_DIR/prompt.md (fallback)
+
+Environment variables:
+  AGENT              Agent to use (amp|claude|opencode)
+  PROJECT_ROOT       Project root directory
+  PROMPT_FILE        Prompt file path
+  STATE_DIR          State directory path
+
+Examples:
+  # Run from project root (Ralph as submodule)
+  ./ralph/ralph.sh --agent claude
+
+  # Run from anywhere with explicit work directory
+  /path/to/ralph/ralph.sh --work-dir /path/to/project --agent opencode
+
+  # Use custom prompt
+  ./ralph/ralph.sh --prompt my-custom-prompt.md --max-iterations 5
 EOF
 }
 
@@ -42,6 +80,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --agent) AGENT="$2"; shift 2;;
     --prompt) PROMPT_FILE="$2"; shift 2;;
+    --work-dir) PROJECT_ROOT="$2"; shift 2;;
     --state-dir) STATE_DIR="$2"; shift 2;;
     --max-iterations) MAX_ITERATIONS="$2"; shift 2;;
     --completion-token) COMPLETION_TOKEN="$2"; shift 2;;
@@ -49,6 +88,22 @@ while [[ $# -gt 0 ]]; do
     *) echo "Unknown argument: $1"; usage; exit 2;;
   esac
 done
+
+# After parsing args, re-detect prompt if not explicitly set
+if [[ -z "${PROMPT_FILE:-}" ]]; then
+  if [[ -f "${PROJECT_ROOT}/prompt.md" ]]; then
+    PROMPT_FILE="${PROJECT_ROOT}/prompt.md"
+  elif [[ -f "${PROJECT_ROOT}/ralph-prompt.md" ]]; then
+    PROMPT_FILE="${PROJECT_ROOT}/ralph-prompt.md"
+  else
+    PROMPT_FILE="${SCRIPT_DIR}/prompt.md"
+  fi
+fi
+
+# Change to project root if specified differently
+if [[ "$(pwd)" != "$PROJECT_ROOT" ]]; then
+  cd "$PROJECT_ROOT"
+fi
 
 RUNNER="${SCRIPT_DIR}/runners/${AGENT}.sh"
 if [[ ! -f "$RUNNER" ]]; then
@@ -78,6 +133,8 @@ fi
 
 echo "Ralph starting"
 echo "  Agent:            $AGENT"
+echo "  Project root:     $PROJECT_ROOT"
+echo "  Ralph dir:        $SCRIPT_DIR"
 echo "  Base prompt:      $PROMPT_FILE"
 echo "  State dir:        $STATE_DIR"
 echo "  Max iterations:   $MAX_ITERATIONS"
@@ -98,6 +155,7 @@ while :; do
     --agent "$AGENT" \
     --base "$PROMPT_FILE" \
     --state-dir "$STATE_DIR" \
+    --ralph-dir "$SCRIPT_DIR" \
     --out "$EFFECTIVE_PROMPT"
 
   OUTPUT_LOG="${STATE_DIR}/runs/${ITER}.log"
