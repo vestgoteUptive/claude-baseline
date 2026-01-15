@@ -5,7 +5,7 @@
 This document provides strategies to minimize token usage when working with Claude Code while maximizing code quality and development speed.
 
 > **🔥 NEW: Aggressive Token Minimization**
-> See [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md) for copy-paste behavior contracts that can reduce token usage by 50-70%.
+> See [TOKEN-MINIMIZATION-RULES.md](../TOKEN-MINIMIZATION-RULES.md) for copy-paste behavior contracts that can reduce token usage by 50-70%.
 > This guide focuses on **context efficiency**, while TOKEN-MINIMIZATION-RULES.md focuses on **response efficiency**.
 
 ---
@@ -33,7 +33,7 @@ Constraints:
 
 **Result:** 50-70% token reduction per session.
 
-**Details:** [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md)
+**Details:** [TOKEN-MINIMIZATION-RULES.md](../TOKEN-MINIMIZATION-RULES.md)
 
 ---
 
@@ -612,7 +612,7 @@ Follow existing handler patterns. No tests needed yet.
 
 ## 18. Aggressive Token Minimization (NEW)
 
-For maximum token efficiency, use the strategies in [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md):
+For maximum token efficiency, use the strategies in [TOKEN-MINIMIZATION-RULES.md](../TOKEN-MINIMIZATION-RULES.md):
 
 ### Key Additions to Your Workflow
 
@@ -646,11 +646,11 @@ For maximum token efficiency, use the strategies in [TOKEN-MINIMIZATION-RULES.md
 - **After:** 1,100 tokens for same feature
 - **Savings:** ~79% reduction
 
-**See:** [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md) for complete guide
+**See:** [TOKEN-MINIMIZATION-RULES.md](../TOKEN-MINIMIZATION-RULES.md) for complete guide
 
 ---
 
 **See Also:**
-- [TOKEN-MINIMIZATION-RULES.md](./TOKEN-MINIMIZATION-RULES.md) - Response efficiency (NEW)
+- [TOKEN-MINIMIZATION-RULES.md](../TOKEN-MINIMIZATION-RULES.md) - Response efficiency (NEW)
 - [02-PROJECT-STRUCTURE.md](./02-PROJECT-STRUCTURE.md) - Standardized layouts
 - [10-DOCUMENTATION-GUIDE.md](./10-DOCUMENTATION-GUIDE.md) - Documentation strategies

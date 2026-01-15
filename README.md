@@ -264,6 +264,6 @@ See the main baseline documentation:
 https://github.com/vestgoteUptive/claude-baseline/blob/main/README.md
 
 Or check specific guides:
-- [Quick Start](https://github.com/vestgoteUptive/claude-baseline/blob/main/12-QUICK-START.md)
-- [Claude Code Optimization](https://github.com/vestgoteUptive/claude-baseline/blob/main/11-CLAUDE-CODE-OPTIMIZATION.md)
-- [Documentation Guide](https://github.com/vestgoteUptive/claude-baseline/blob/main/10-DOCUMENTATION-GUIDE.md)
+- [Quick Start](https://github.com/vestgoteUptive/claude-baseline/blob/main/documentation/12-QUICK-START.md)
+- [Claude Code Optimization](https://github.com/vestgoteUptive/claude-baseline/blob/main/documentation/11-CLAUDE-CODE-OPTIMIZATION.md)
+- [Documentation Guide](https://github.com/vestgoteUptive/claude-baseline/blob/main/documentation/10-DOCUMENTATION-GUIDE.md)

@@ -415,6 +415,6 @@ Then proceed with efficient prompts.
 
 ## See Also
 
-- [11-CLAUDE-CODE-OPTIMIZATION.md](./11-CLAUDE-CODE-OPTIMIZATION.md) - Context efficiency strategies
+- [11-CLAUDE-CODE-OPTIMIZATION.md](./documentation/11-CLAUDE-CODE-OPTIMIZATION.md) - Context efficiency strategies
 - [LLM-OPTIMIZED-STANDARDS.md](./LLM-OPTIMIZED-STANDARDS.md) - Code patterns
 - [CORE-PATTERNS.md](./CORE-PATTERNS.md) - Quick pattern reference
