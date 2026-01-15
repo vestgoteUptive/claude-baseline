@@ -1,0 +1,10 @@
+# Ralph state directory (contains iteration logs and context)
+.ralph/
+
+# Common temporary files
+*.tmp
+*.swp
+*~
+
+# Test artifacts
+test_prompt.md
