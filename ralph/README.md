@@ -194,3 +194,180 @@ Ralph automatically archives previous runs when you start a new feature (differe
 
 - [Geoffrey Huntley's Ralph article](https://ghuntley.com/ralph/)
 - [Amp documentation](https://ampcode.com/manual)
+
+
+
+# Ralph (multi-agent) — Amp / Claude Code / OpenCode
+
+This folder contains a **single Ralph loop** (`ralph.sh`) that can run against different coding agents by swapping a small **runner** script.
+
+The goal is to keep **one** orchestration workflow (prompt building, state/logs, completion detection) and only vary **how the agent is invoked**.
+
+---
+
+## Structure
+ralph/
+ralph.sh                     # Shared orchestrator loop
+prompt.md                    # Base prompt (agent-agnostic)
+.gitignore                   # Ignores local state (.ralph/)
+
+lib/
+prompt_builder.sh          # Builds effective prompt by inlining skills + context
+state.sh                   # Creates and manages state directory/files
+detect_done.sh             # Detects completion token in output logs
+
+runners/
+amp.sh                     # Amp invocation
+claude.sh                  # Claude Code invocation
+opencode.sh                # OpenCode invocation
+
+skills/
+common/                    # Portable skills used by all agents (Markdown)
+amp/                       # Amp-specific notes/wrappers (optional)
+claude/                    # Claude Code-specific notes/wrappers (optional)
+opencode/                  # OpenCode-specific notes/wrappers (optional)
+
+---
+
+## How it works
+
+Each iteration:
+
+1. `lib/prompt_builder.sh` builds `.ralph/effective_prompt.md` by concatenating:
+   - `prompt.md` (base prompt)
+   - `.ralph/context.md` (optional persistent context you can edit)
+   - `skills/common/*.md`
+   - `skills/<agent>/*.md` (if present)
+
+2. `ralph.sh` calls `runners/<agent>.sh`, which must implement:
+   - `run_agent "<prompt_file>"`
+   - print the agent output to **stdout**
+
+3. Output is logged to `.ralph/runs/<iteration>.log`
+
+4. The loop exits when it detects the completion token:
+   - default: `<RALPH_DONE/>`
+
+---
+
+## Requirements
+
+- Bash (with `set -euo pipefail` support)
+- `git` available on PATH
+- One or more agent CLIs installed and callable:
+  - `amp` (Amp)
+  - `claude` (Claude Code)
+  - `opencode` (OpenCode)
+
+> The runners contain **placeholder** CLI invocations. Update them to match your actual local command/flags.
+
+---
+
+## Quick start
+
+From inside `ralph/`:
+
+### Amp
+```bash
+AGENT=amp ./ralph.sh
+
+Claude Code
+AGENT=claude ./ralph.sh --max-iterations 10
+
+OpenCode
+AGENT=opencode ./ralph.sh
+
+Options
+
+ralph.sh supports both env vars and flags:
+./ralph.sh \
+  --agent amp|claude|opencode \
+  --prompt prompt.md \
+  --state-dir .ralph \
+  --max-iterations 0 \
+  --completion-token "<RALPH_DONE/>"
+
+  Environment variables:
+	•	AGENT — amp|claude|opencode (default: amp)
+	•	PROMPT_FILE — base prompt file (default: prompt.md)
+	•	STATE_DIR — state/log directory (default: .ralph)
+	•	COMPLETION_TOKEN — completion token (default: <RALPH_DONE/>)
+
+⸻
+
+State and logs
+
+Local state is stored in .ralph/ (ignored by git if you keep the provided .gitignore).
+
+Important files:
+	•	.ralph/context.md — persistent context included every run (edit this!)
+	•	.ralph/effective_prompt.md — the fully built prompt used for the latest iteration
+	•	.ralph/runs/<n>.log — stdout/stderr from each iteration
+
+⸻
+
+Skills (portable across agents)
+
+Skills are just Markdown that gets inlined into the effective prompt.
+	•	Put agent-agnostic workflow guidance in:
+	•	skills/common/
+	•	Put tool-specific notes/commands in:
+	•	skills/amp/
+	•	skills/claude/
+	•	skills/opencode/
+
+This makes the content reusable even if each agent has a different native “skills” mechanism.
+
+⸻
+
+Updating runners
+
+Each runner must define:
+run_agent() {
+  local prompt_file="$1"
+  # invoke agent CLI here, printing to stdout
+}
+
+
+Edit these files:
+	•	runners/amp.sh
+	•	runners/claude.sh
+	•	runners/opencode.sh
+
+Replace the placeholder command (currently agent < "$prompt_file") with the real invocation/flags you use.
+
+⸻
+
+Completion behavior
+
+The loop stops only when the output contains the completion token, default:
+<RALPH_DONE/>
+
+To change it:
+	•	edit COMPLETION_TOKEN env var, or
+	•	pass --completion-token "<YOUR_TOKEN>"
+
+⸻
+
+Tips
+	•	Keep skills/common/ focused on workflow and quality bar (portable).
+	•	Keep any tool/CLI specific instructions inside skills/<agent>/.
+	•	If an agent requires a TTY or behaves differently non-interactively, handle it inside its runner script (so the main loop remains stable).
+
+⸻
+
+Troubleshooting
+	•	“agent not found on PATH”
+	•	Install the CLI and ensure it’s on PATH (or update the runner to call the correct binary).
+	•	Loop never finishes
+	•	Ensure your prompt instructs the agent to print the completion token exactly, on its own line.
+	•	Check .ralph/runs/<n>.log to see what the agent is producing.
+	•	Runner exits non-zero
+	•	Ralph will warn and continue unless it sees the completion token.
+	•	Fix flags/TTY issues inside the runner.
+
+⸻
+
+License / attribution
+
+This folder is based on a copy of the snarktank/ralph repository, modified to support multiple agent runners.
