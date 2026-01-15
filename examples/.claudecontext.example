@@ -17,6 +17,20 @@ Primary Reference: https://github.com/vestgoteUptive/claude-baseline
 
 Local Copy: .standards/CORE-PATTERNS.md (if copied locally)
 
+## Claude Response Constraints
+
+**Token Efficiency Mode: ENABLED**
+- Output format: Diffs only (no full files unless explicitly requested)
+- Explanations: None unless explicitly requested
+- Reasoning: Skip step-by-step unless debugging complex issue
+- Token target: <150 per response (can exceed for complex changes)
+- Uncertainty: Ask ONE short clarifying question
+- No changes: Reply "No changes needed"
+- Trust: Assume tests, types, and architecture are correct
+- Redesigns: Only if explicitly requested
+
+See [TOKEN-MINIMIZATION-RULES.md](https://github.com/vestgoteUptive/claude-baseline/blob/main/TOKEN-MINIMIZATION-RULES.md) for details
+
 ## Tech Stack
 
 ### Frontend
@@ -324,29 +338,37 @@ Example:
 
 ### When Starting a New Feature
 ```
-Prompt: "Read .claudecontext for project patterns. Create OrderService 
-following the UserService pattern. Endpoints: GET /orders, POST /orders"
+Prompt: "Read .claudecontext for project patterns. Create OrderService
+following the UserService pattern. Endpoints: GET /orders, POST /orders
+
+Constraints: Diff only, no explanations, <200 tokens"
 ```
 
 ### When Fixing Bugs
 ```
 Prompt: "Context: .claudecontext. Fix error in internal/handlers/user.go:45
 Error: [paste error message]
-Expected: Return dto.Error with DUPLICATE_EMAIL code"
+Expected: Return dto.Error with DUPLICATE_EMAIL code
+
+Constraints: Diff only, <100 tokens"
 ```
 
 ### When Following Patterns
 ```
-Prompt: "Following patterns in .claudecontext and 
+Prompt: "Following patterns in .claudecontext and
 https://github.com/vestgoteUptive/claude-baseline/blob/main/CORE-PATTERNS.md
-Create new feature: [description]"
+Create new feature: [description]
+
+Constraints: Diff only, no explanations, <200 tokens"
 ```
 
 ### When Referring to Baseline Standards
 ```
-Prompt: "Use Go backend handler pattern from 
+Prompt: "Use Go backend handler pattern from
 https://github.com/vestgoteUptive/claude-baseline/blob/main/LLM-OPTIMIZED-STANDARDS.md
-Implement: [endpoint description]"
+Implement: [endpoint description]
+
+Constraints: Diff only, no explanations, <150 tokens"
 ```
 
 ---
