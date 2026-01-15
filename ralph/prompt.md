@@ -110,17 +110,27 @@ git add prd.json
 git commit -m "chore: mark US-001 as complete"
 ```
 
-### 8. Signal Completion
+### 8. Check if All Stories Complete
 
-When your story passes all checks and is committed:
+After committing your story and updating prd.json, **check if there are more stories to do**:
 
-**Print this exact token on its own line:**
+```bash
+# Count incomplete stories
+INCOMPLETE=$(jq '[.userStories[] | select(.passes == false)] | length' prd.json)
 
+if [ "$INCOMPLETE" -eq 0 ]; then
+  echo "✅ All stories complete!"
+  echo "<RALPH_DONE/>"
+else
+  echo "✅ Story complete. $INCOMPLETE story(ies) remaining."
+  echo "Ralph will start the next iteration automatically."
+fi
 ```
-<RALPH_DONE/>
-```
 
-This tells Ralph to proceed to the next iteration.
+**IMPORTANT:**
+- Only print `<RALPH_DONE/>` when **ALL** stories in prd.json have `"passes": true`
+- If there are more stories to do, do NOT print the completion token
+- Ralph will automatically start the next iteration to handle remaining stories
 
 ---
 
@@ -245,8 +255,14 @@ Closes #US-001"
 
 # 5. Update prd.json (mark passes: true)
 
-# 6. Done
-echo "<RALPH_DONE/>"
+# 6. Check if all stories complete
+INCOMPLETE=$(jq '[.userStories[] | select(.passes == false)] | length' prd.json)
+if [ "$INCOMPLETE" -eq 0 ]; then
+  echo "✅ All stories complete!"
+  echo "<RALPH_DONE/>"
+else
+  echo "✅ US-001 complete. $INCOMPLETE story(ies) remaining."
+fi
 ```
 
 ### Example 2: UI Component Story
@@ -283,8 +299,14 @@ git commit -m "feat(ui): add priority badge to task cards"
 
 # 6. Update prd.json
 
-# 7. Done
-echo "<RALPH_DONE/>"
+# 7. Check if all stories complete
+INCOMPLETE=$(jq '[.userStories[] | select(.passes == false)] | length' prd.json)
+if [ "$INCOMPLETE" -eq 0 ]; then
+  echo "✅ All stories complete!"
+  echo "<RALPH_DONE/>"
+else
+  echo "✅ Story complete. $INCOMPLETE story(ies) remaining."
+fi
 ```
 
 ---
@@ -322,6 +344,7 @@ Ralph will exit the loop.
 - **Quality checks must pass**
 - **Commit when complete**
 - **Update prd.json**
-- **Print `<RALPH_DONE/>`**
+- **Check for remaining stories**
+- **Only print `<RALPH_DONE/>` when ALL stories complete**
 
 Good luck! 🚀
