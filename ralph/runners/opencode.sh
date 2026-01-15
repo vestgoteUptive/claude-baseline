@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Replace "opencode" invocation with your OpenCode CLI command.
+# OpenCode runner for Ralph
+#
+# NOTE: Update this with actual OpenCode CLI flags once tested
+# Common patterns to try:
+#   - opencode --non-interactive < prompt.md
+#   - opencode exec < prompt.md
+#   - opencode run --stdin < prompt.md
+#
 # Requirements:
-# - Must print full assistant output to stdout.
+# - Must print full assistant output to stdout
+# - OpenCode CLI must be installed and available on PATH
 
 run_agent() {
   local prompt_file="$1"
